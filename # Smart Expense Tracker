@@ -1,0 +1,23 @@
+# Smart Expense Tracker
+
+A web application to manage personal expenses and track spending efficiently.
+
+## Features
+- Add, edit, and delete expenses  
+- Category-wise expense tracking  
+- Simple dashboard view  
+
+## Tech Stack
+- Java  
+- Spring Boot  
+- MySQL  
+- HTML, CSS, JavaScript  
+
+## How to Run
+1. Clone the repository  
+2. Configure MySQL in `application.properties`  
+3. Run the Spring Boot application  
+4. Open `http://localhost:8080`
+
+## Project Link
+https://github.com/lakshmipriyajaya1408-create/smart-expense-tracker
