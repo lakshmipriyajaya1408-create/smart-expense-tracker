@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartExpense – Track. Save. Grow.</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-dark:  #1a3d2b;
+    --green-mid:   #2d5a3d;
+    --green-light: #4a7c5f;
+    --gold:        #c9a84c;
+    --cream:       #f5f0e8;
+    --cream-dark:  #ede8de;
+    --text-dark:   #1a1a1a;
+    --text-mid:    #4a4a4a;
+    --text-light:  #7a7a7a;
+    --white:       #ffffff;
+    --radius-sm:   8px;
+    --radius-md:   16px;
+    --radius-lg:   24px;
+    --radius-pill: 999px;
+  }
+
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); min-height: 100vh; }
+
+  /* ─── NAV ─── */
+  nav {
+    display: flex;
+    align-items: center;
+    padding: 14px 60px;
+    background: var(--cream);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--cream-dark);
+    gap: 12px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; font-size: 1.05rem; color: var(--text-dark);
+    text-decoration: none; flex-shrink: 0;
+  }
+  .logo-icon {
+    width: 34px; height: 34px; background: var(--green-dark);
+    border-radius: 8px; display: grid; place-items: center;
+    color: var(--white); font-weight: 700; font-size: 0.9rem;
+  }
+
+  .nav-spacer { flex: 1; }
+
+  /* AUTH BUTTONS (shown when logged out) */
+  #nav-auth-btns { display: flex; align-items: center; gap: 10px; }
+
+  .nav-login-btn {
+    padding: 7px 16px; border-radius: var(--radius-pill); font-size: 0.82rem;
+    font-weight: 500; color: var(--text-mid); text-decoration: none;
+    border: 1.5px solid var(--cream-dark); background: none; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .nav-login-btn:hover { border-color: var(--green-dark); color: var(--text-dark); }
+
+  .nav-signup-btn {
+    padding: 7px 16px; border-radius: var(--radius-pill); font-size: 0.82rem;
+    font-weight: 600; color: var(--white); text-decoration: none;
+    background: var(--green-dark); cursor: pointer; transition: background 0.2s, transform 0.15s;
+    border: none;
+  }
+  .nav-signup-btn:hover { background: var(--green-mid); transform: translateY(-1px); }
+
+  .go-dashboard-btn {
+    display: inline-block; padding: 8px 16px; background: var(--gold);
+    color: var(--green-dark); border-radius: 8px; font-size: 13px;
+    font-weight: 600; text-decoration: none; transition: background 0.2s;
+  }
+  .go-dashboard-btn:hover { background: #b8932f; }
+
+  /* PROFILE AVATAR + DROPDOWN (shown when logged in) */
+  #nav-user-area { display: none; align-items: center; gap: 10px; position: relative; }
+
+  .profile-avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--green-dark);
+    color: var(--white); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.3s; flex-shrink: 0;
+    border: none; position: relative;
+  }
+  .profile-avatar:hover { background: var(--green-mid); transform: scale(1.06); }
+
+  /* Dropdown menu */
+  .user-dropdown {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    background: var(--white); border: 1.5px solid var(--cream-dark);
+    border-radius: 14px; padding: 8px; min-width: 210px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12); z-index: 300;
+    display: none; animation: fadeUp 0.2s ease;
+  }
+  .user-dropdown.open { display: block; }
+
+  .dropdown-header {
+    padding: 10px 14px 12px; border-bottom: 1px solid var(--cream-dark); margin-bottom: 6px;
+  }
+  .dropdown-name { font-weight: 600; font-size: 0.9rem; color: var(--text-dark); }
+  .dropdown-email { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+
+  .dropdown-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+    border-radius: 8px; font-size: 0.85rem; font-weight: 500; color: var(--text-mid);
+    text-decoration: none; cursor: pointer; transition: background 0.15s, color 0.15s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .dropdown-item:hover { background: var(--cream); color: var(--text-dark); }
+  .dropdown-item.danger { color: #c0392b; }
+  .dropdown-item.danger:hover { background: #fcebeb; color: #c0392b; }
+  .dropdown-item svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+  .dropdown-divider { height: 1px; background: var(--cream-dark); margin: 6px 0; }
+
+  /* Online indicator */
+  .online-dot {
+    position: absolute; bottom: 1px; right: 1px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #22c55e; border: 2px solid var(--white);
+  }
+
+  /* ─── QUOTE + GRAPH ─── */
+  .quote-strip {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: rgba(255,255,255,0.08); border-left: 3px solid var(--gold);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 22px; animation: fadeUp 0.5s ease;
+  }
+  .quote-icon { font-size: 1.6rem; color: var(--gold); line-height: 1; margin-top: -2px; font-family: Georgia, serif; flex-shrink: 0; }
+  .quote-text { font-size: 0.82rem; color: rgba(255,255,255,0.85); line-height: 1.55; font-style: italic; }
+
+  .graph-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .graph-legend { display: flex; align-items: center; gap: 10px; font-size: 0.72rem; color: rgba(255,255,255,0.6); }
+  .leg-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* ─── HERO ─── */
+  .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding: 60px 60px 80px; max-width: 1280px; margin: 0 auto; }
+
+  .badge { display: inline-block; padding: 7px 16px; background: var(--cream-dark); border-radius: var(--radius-pill); font-size: 0.82rem; font-weight: 500; color: var(--text-mid); margin-bottom: 28px; }
+
+  .hero-title { font-family: 'Playfair Display', serif; font-size: 4rem; font-weight: 800; line-height: 1.1; color: var(--text-dark); margin-bottom: 24px; }
+  .hero-desc { font-size: 1rem; color: var(--text-mid); line-height: 1.7; max-width: 400px; margin-bottom: 36px; }
+  .hero-ctas { display: flex; gap: 16px; align-items: center; }
+  .hero-stat { display: flex; flex-direction: column; justify-content: center; padding-left: 20px; border-left: 2px solid var(--cream-dark); }
+  .hero-stat-num { font-size: 1.1rem; font-weight: 700; color: var(--green-dark); line-height: 1.2; }
+  .hero-stat-label { font-size: 0.75rem; color: var(--text-light); }
+
+  /* ─── DASHBOARD CARD ─── */
+  .dashboard-card { background: var(--green-dark); border-radius: var(--radius-lg); padding: 32px 36px 28px; color: var(--white); box-shadow: 0 24px 60px rgba(26,61,43,0.25); }
+  .card-label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 12px; height: 120px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 10px; }
+  .bar { width: 100%; background: var(--green-light); border-radius: 6px 6px 0 0; opacity: 0.75; transition: opacity 0.2s; }
+  .bar.active { background: var(--gold); opacity: 1; }
+  .bar:hover { opacity: 1; }
+  .bar-label { font-size: 0.72rem; opacity: 0.6; letter-spacing: 0.04em; }
+
+  /* ─── FEATURES ─── */
+  .features { padding: 0 60px 80px; max-width: 1280px; margin: 0 auto; }
+  .features-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+  .feature-card { background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-md); padding: 28px 20px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; }
+  .feature-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .feature-icon { width: 52px; height: 52px; background: var(--green-dark); border-radius: var(--radius-pill); display: grid; place-items: center; margin: 0 auto 16px; font-size: 1.3rem; }
+  .feature-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; color: var(--text-dark); }
+  .feature-desc { font-size: 0.8rem; color: var(--text-light); line-height: 1.5; }
+
+  /* ─── AUTH MODAL ─── */
+  .auth-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 9999; }
+  .auth-box { width: 380px; background: var(--white); border-radius: 20px; padding: 40px 32px; text-align: center; animation: fadeUp .4s ease; position: relative; }
+  .close-auth { position: absolute; right: 18px; top: 12px; font-size: 26px; cursor: pointer; color: var(--text-light); background: none; border: none; }
+  .auth-box h2 { font-family: 'Playfair Display', serif; margin-bottom: 6px; }
+  .auth-sub { font-size: .85rem; color: var(--text-light); margin-bottom: 22px; }
+  .google-btn { width: 100%; padding: 12px; border-radius: 30px; border: 1.5px solid var(--cream-dark); background: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; font-weight: 600; font-family: 'DM Sans', sans-serif; }
+  .google-btn img { width: 18px; }
+  .divider { margin: 18px 0; font-size: .75rem; color: var(--text-light); position: relative; }
+  .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--cream-dark); }
+  .divider::before { left: 0; } .divider::after { right: 0; }
+  #authForm input { width: 100%; padding: 12px 14px; margin-bottom: 14px; border-radius: 8px; border: 1.5px solid var(--cream-dark); font-family: 'DM Sans'; font-size: 14px; outline: none; }
+  #authForm input:focus { border-color: var(--green-dark); }
+  .auth-submit { width: 100%; padding: 12px; border-radius: 30px; border: none; background: var(--green-dark); color: #fff; font-weight: 600; cursor: pointer; font-family: 'DM Sans'; font-size: 15px; transition: background 0.2s; }
+  .auth-submit:hover { background: var(--green-mid); }
+  .switch-auth { margin-top: 16px; font-size: .8rem; }
+  .switch-auth span { color: var(--green-dark); cursor: pointer; font-weight: 600; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--green-dark); color: #f5f0e8; padding: 12px 24px;
+    border-radius: 12px; font-size: 14px; font-weight: 500;
+    opacity: 0; transition: all 0.3s ease; z-index: 99999; white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ─── BOTTOM ─── */
+  .bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding: 60px 60px 80px; max-width: 1280px; margin: 0 auto; }
+  .why-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; margin-bottom: 28px; }
+  .checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 32px; list-style: none; }
+  .checklist li { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--text-mid); }
+  .check-icon { width: 22px; height: 22px; border: 2px solid var(--green-dark); border-radius: var(--radius-pill); display: grid; place-items: center; flex-shrink: 0; color: var(--green-dark); font-size: 0.6rem; }
+  .cta-box { background: var(--cream-dark); border-radius: var(--radius-lg); padding: 48px 40px; display: flex; flex-direction: column; gap: 16px; position: relative; overflow: hidden; }
+  .cta-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; max-width: 260px; }
+  .cta-desc { font-size: 0.9rem; color: var(--text-mid); line-height: 1.6; max-width: 280px; }
+  .wallet-illustration { position: absolute; right: -10px; bottom: -10px; width: 160px; opacity: 0.9; }
+  .wallet-svg { width: 160px; height: 140px; }
+
+  /* ─── FOOTER ─── */
+  footer { background: var(--green-dark); color: rgba(255,255,255,0.8); padding: 48px 60px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; align-items: start; }
+  .footer-logo { display: flex; align-items: center; gap: 10px; color: var(--white); font-weight: 600; font-size: 1rem; margin-bottom: 10px; }
+  .footer-logo-icon { width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 7px; display: grid; place-items: center; font-size: 0.9rem; font-weight: 700; color: var(--white); }
+  .footer-copy { font-size: 0.78rem; opacity: 0.55; margin-top: 8px; }
+  .footer-col-title { font-size: 0.82rem; font-weight: 600; color: var(--white); margin-bottom: 16px; }
+  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-links a { text-decoration: none; color: rgba(255,255,255,0.6); font-size: 0.82rem; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--white); }
+  .social-icons { display: flex; gap: 12px; }
+  .social-icon { width: 36px; height: 36px; border: 1.5px solid rgba(255,255,255,0.25); border-radius: var(--radius-pill); display: grid; place-items: center; color: rgba(255,255,255,0.7); font-size: 0.8rem; cursor: pointer; transition: border-color 0.2s, color 0.2s; text-decoration: none; }
+  .social-icon:hover { border-color: var(--white); color: var(--white); }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .hero-left > * { animation: fadeUp 0.6s ease both; }
+  .hero-left > *:nth-child(1) { animation-delay: 0.1s; }
+  .hero-left > *:nth-child(2) { animation-delay: 0.2s; }
+  .hero-left > *:nth-child(3) { animation-delay: 0.3s; }
+  .hero-left > *:nth-child(4) { animation-delay: 0.4s; }
+  .dashboard-card { animation: fadeUp 0.6s ease 0.3s both; }
+  .feature-card:nth-child(1) { animation: fadeUp 0.5s ease 0.1s both; }
+  .feature-card:nth-child(2) { animation: fadeUp 0.5s ease 0.15s both; }
+  .feature-card:nth-child(3) { animation: fadeUp 0.5s ease 0.2s both; }
+  .feature-card:nth-child(4) { animation: fadeUp 0.5s ease 0.25s both; }
+  .feature-card:nth-child(5) { animation: fadeUp 0.5s ease 0.3s both; }
+  .feature-card:nth-child(6) { animation: fadeUp 0.5s ease 0.35s both; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- AUTH MODAL -->
+<div class="auth-modal" id="authModal">
+  <div class="auth-box">
+    <button class="close-auth" onclick="closeAuth()">×</button>
+    <h2 id="authTitle">Welcome Back</h2>
+    <p class="auth-sub" id="authSub">Login to continue tracking your expenses</p>
+
+    
+
+   
+
+    <form id="authForm" onsubmit="handleFormAuth(event)">
+      <div id="nameField" style="display:none;">
+        <input type="text" id="inp-fullname" placeholder="Full Name"/>
+      </div>
+      <input type="email" id="inp-email" placeholder="Email address" required/>
+      <input type="password" id="inp-password" placeholder="Password" required/>
+      <div id="confirmPasswordField" style="display:none;">
+        <input type="password" id="inp-confirm" placeholder="Re-enter Password"/>
+      </div>
+      <button type="submit" class="auth-submit" id="authSubmitBtn">Login</button>
+    </form>
+
+    <p class="switch-auth" id="switchAuthText">
+      Don't have an account? <span onclick="switchAuth()">Create one</span>
+    </p>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-icon">S</div>
+    SmartExpense
+  </a>
+
+  <div class="nav-spacer"></div>
+
+  <!-- Shown when LOGGED OUT -->
+  <div id="nav-auth-btns">
+    <button class="nav-login-btn" onclick="openAuth('login')">Login</button>
+    <button class="nav-signup-btn" onclick="openAuth('signup')">Sign up</button>
+  </div>
+
+  <!-- Shown when LOGGED IN -->
+  <div id="nav-user-area">
+     <div style="position:relative;">
+      <button class="profile-avatar" id="avatarBtn" onclick="toggleDropdown()" aria-label="User menu">
+        <span id="avatarInitials">--</span>
+        <span class="online-dot"></span>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <div class="dropdown-header">
+          <div class="dropdown-name" id="dropdownName">Loading...</div>
+          <div class="dropdown-email" id="dropdownEmail">loading@email.com</div>
+        </div>
+        <a class="dropdown-item" href="/dashboard">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item danger" onclick="handleLogout()">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <span class="badge">Personal Expense Tracker</span>
+    <h1 class="hero-title">Track.<br>Save.<br>Grow.</h1>
+    <p class="hero-desc">SmartExpense helps you take control of your money. Track expenses, set budgets, and achieve your financial goals with ease.</p>
+    <div class="hero-ctas">
+      <div class="hero-stat">
+        <span class="hero-stat-num">10k+</span>
+        <span class="hero-stat-label">Users saving smarter</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <div class="quote-strip" id="quoteStrip">
+      <span class="quote-icon">"</span>
+      <span class="quote-text" id="quoteText">A budget is telling your money where to go instead of wondering where it went.</span>
+    </div>
+    <div class="graph-header">
+      <div class="card-label">Weekly Spending Overview</div>
+      <div class="graph-legend">
+        <span class="leg-dot" style="background:var(--gold)"></span><span>This week</span>
+        <span class="leg-dot" style="background:rgba(255,255,255,0.25)"></span><span>Last week</span>
+      </div>
+    </div>
+    <div class="bar-chart" id="chart"></div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">💼</div><div class="feature-title">Track Expenses</div><div class="feature-desc">Easily record and categorize your daily expenses.</div></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Visual Reports</div><div class="feature-desc">Understand your spending with beautiful charts.</div></div>
+    <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Set Budgets</div><div class="feature-desc">Create monthly budgets and stay on track.</div></div>
+    <div class="feature-card"><div class="feature-icon">🔔</div><div class="feature-title">Get Alerts</div><div class="feature-desc">Receive smart alerts when you exceed your budget.</div></div>
+    <div class="feature-card"><div class="feature-icon">🔐</div><div class="feature-title">Data Security</div><div class="feature-desc">Keeping your data safe and protected.</div></div>
+    <div class="feature-card"><div class="feature-icon">📋</div><div class="feature-title">Export Reports</div><div class="feature-desc">Export your reports as PDF or Excel in one click.</div></div>
+  </div>
+</section>
+
+<!-- BOTTOM -->
+<section class="bottom">
+  <div>
+    <h2 class="why-title">Why Choose SmartExpense?</h2>
+    <ul class="checklist">
+      <li><span class="check-icon">✓</span> Secure &amp; Private</li>
+      <li><span class="check-icon">✓</span> Accessible Anywhere</li>
+      <li><span class="check-icon">✓</span> Easy to Use</li>
+      <li><span class="check-icon">✓</span> Save More, Stress Less</li>
+    </ul>
+  </div>
+  <div class="cta-box">
+    <h2 class="cta-title">Start Managing Your Money Today</h2>
+    <p class="cta-desc">Join thousands of users who are already tracking, saving, and growing their money.</p>
+    <svg class="wallet-svg wallet-illustration" viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="20" width="85" height="52" rx="6" fill="#4a7c5f" opacity="0.6"/>
+      <rect x="24" y="26" width="85" height="52" rx="6" fill="#2d5a3d" opacity="0.75"/>
+      <rect x="18" y="50" width="95" height="62" rx="10" fill="#1a3d2b"/>
+      <rect x="18" y="50" width="95" height="20" rx="6" fill="#2d5a3d"/>
+      <rect x="90" y="64" width="23" height="22" rx="6" fill="#1a3d2b" stroke="#4a7c5f" stroke-width="1.5"/>
+      <circle cx="100" cy="118" r="14" fill="#c9a84c"/>
+      <circle cx="100" cy="118" r="10" fill="#e4bc6a" opacity="0.6"/>
+      <rect x="128" y="95" width="8" height="28" rx="4" fill="#2d5a3d"/>
+      <ellipse cx="132" cy="82" rx="14" ry="18" fill="#4a7c5f"/>
+      <ellipse cx="132" cy="80" rx="9" ry="14" fill="#2d5a3d" opacity="0.5"/>
+      <line x1="30" y1="62" x2="65" y2="62" stroke="#4a7c5f" stroke-width="2" stroke-linecap="round"/>
+      <line x1="30" y1="68" x2="55" y2="68" stroke="#4a7c5f" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo"><div class="footer-logo-icon">S</div>SmartExpense</div>
+    <p class="footer-copy">© 2026 SmartExpense. All rights reserved.</p>
+  </div>
+  <div>
+    <div class="footer-col-title">Our Features</div>
+    <ul class="footer-links">
+      <li><a>AI-Based Spending Analysis</a></li>
+      <li><a>Dynamic Expense Visualization</a></li>
+      <li><a>Automated Budget Monitoring</a></li>
+      <li><a>Personalized Financial Control</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-title">Follow Us</div>
+    <div class="social-icons">
+      <a href="#" class="social-icon">f</a>
+      <a href="#" class="social-icon">𝕏</a>
+      <a href="#" class="social-icon">📸</a>
+      <a href="#" class="social-icon">in</a>
+    </div>
+  </div>
+</footer>
+<script>
+let currentUser = null;
+let isLoginMode = true;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('smartexpense_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    updateNavForLogin();
+  }
+  buildChart();
+  startQuotes();
+});
+
+function updateNavForLogin() {
+  document.getElementById('nav-auth-btns').style.display = 'none';
+  const userArea = document.getElementById('nav-user-area');
+  userArea.style.display = 'flex';
+  const initials = getInitials(currentUser.name);
+  document.getElementById('avatarInitials').textContent = initials;
+  document.getElementById('dropdownName').textContent = currentUser.name;
+  document.getElementById('dropdownEmail').textContent = currentUser.email;
+}
+
+function updateNavForLogout() {
+  document.getElementById('nav-auth-btns').style.display = 'flex';
+  document.getElementById('nav-user-area').style.display = 'none';
+  document.getElementById('userDropdown').classList.remove('open');
+}
+
+function getInitials(name) {
+  const parts = (name || '').trim().split(' ');
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return (parts[0] || 'U').slice(0, 2).toUpperCase();
+}
+
+function toggleDropdown() {
+  document.getElementById('userDropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  const area = document.getElementById('nav-user-area');
+  if (area && !area.contains(e.target)) {
+    document.getElementById('userDropdown').classList.remove('open');
+  }
+});
+
+function openAuth(mode = 'login') {
+  isLoginMode = (mode === 'login');
+  updateAuthUI();
+  document.getElementById('authModal').style.display = 'flex';
+  document.getElementById('inp-email').value = '';
+  document.getElementById('inp-password').value = '';
+  document.getElementById('inp-fullname').value = '';
+  if (document.getElementById('inp-confirm'))
+    document.getElementById('inp-confirm').value = '';
+}
+
+function closeAuth() {
+  document.getElementById('authModal').style.display = 'none';
+}
+
+function switchAuth() {
+  isLoginMode = !isLoginMode;
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const login = isLoginMode;
+  document.getElementById('authTitle').textContent = login ? 'Welcome Back' : 'Create Account';
+  document.getElementById('authSub').textContent = login
+    ? 'Login to continue tracking your expenses'
+    : 'Start managing your money smarter';
+  document.getElementById('authSubmitBtn').textContent = login ? 'Login' : 'Sign Up';
+  document.getElementById('nameField').style.display = login ? 'none' : 'block';
+  document.getElementById('confirmPasswordField').style.display = login ? 'none' : 'block';
+  document.getElementById('switchAuthText').innerHTML = login
+    ? `Don't have an account? <span onclick="switchAuth()">Create one</span>`
+    : `Already have an account? <span onclick="switchAuth()">Login</span>`;
+}
+
+function handleFormAuth(e) {
+  e.preventDefault();
+  const email    = document.getElementById('inp-email').value.trim();
+  const password = document.getElementById('inp-password').value;
+  const name     = document.getElementById('inp-fullname').value.trim();
+
+  if (!email || !password) { showToast('Please fill in all fields'); return; }
+
+  if (!isLoginMode) {
+    // SIGNUP
+    if (!name) { showToast('Please enter your full name'); return; }
+    const confirm = document.getElementById('inp-confirm').value;
+    if (password !== confirm) { showToast('Passwords do not match'); return; }
+    if (password.length < 6) { showToast('Password must be at least 6 characters'); return; }
+
+    fetch('/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+    }).then(res => {
+      if (res.ok) {
+        loginUser({ name, email });
+        showToast('Account created! Welcome, ' + name.split(' ')[0] + ' 🎉');
+      } else {
+        showToast('Signup failed. Try again.');
+      }
+    }).catch(() => showToast('Server error. Try again.'));
+
+  } else {
+    // LOGIN
+    fetch('/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+}).then(res => {
+  if (res.ok) {
+    loginUser({ name: email.split('@')[0], email });
+    showToast('Welcome back! 👋');
+    window.location.href = '/dashboard';
+  } else {
+    showToast('Invalid email or password.');
+  }
+}).catch(() => showToast('Server error. Try again.'));
+  }
+}
+
+function loginUser(user) {
+  currentUser = user;
+  localStorage.setItem('smartexpense_user', JSON.stringify(user));
+  updateNavForLogin();
+  closeAuth();
+}
+
+function handleLogout() {
+  currentUser = null;
+  localStorage.removeItem('smartexpense_user');
+  localStorage.removeItem("expenses");
+  localStorage.removeItem("budget");
+  localStorage.removeItem("profile_name");
+  localStorage.removeItem("profile_email");
+  localStorage.removeItem("profile_city");
+  updateNavForLogout();
+  showToast('Logged out successfully. See you soon! 👋');
+  location.reload();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function buildChart() {
+  const days   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const thisWk = [54, 72, 48, 91, 65, 80, 38];
+  const lastWk = [60, 55, 70, 75, 50, 68, 45];
+  const chart  = document.getElementById('chart');
+  days.forEach((d, i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const barB = document.createElement('div');
+    barB.className = 'bar';
+    barB.style.cssText = `height:0%;opacity:0.28;position:absolute;bottom:0;left:0;right:0;border-radius:5px 5px 0 0;background:#fff;transition:height 0.7s cubic-bezier(0.34,1.3,0.64,1) ${i*0.07}s`;
+    const barA = document.createElement('div');
+    barA.className = 'bar' + (i === 3 ? ' active' : '');
+    barA.style.cssText = `height:0%;position:absolute;bottom:0;left:0;right:0;border-radius:5px 5px 0 0;background:${i===3?'var(--gold)':'var(--green-light)'};transition:height 0.7s cubic-bezier(0.34,1.3,0.64,1) ${i*0.07+0.1}s`;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;width:100%;flex:1;';
+    wrap.appendChild(barB);
+    wrap.appendChild(barA);
+    const label = document.createElement('div');
+    label.className = 'bar-label';
+    label.textContent = d;
+    col.appendChild(wrap);
+    col.appendChild(label);
+    chart.appendChild(col);
+    setTimeout(() => {
+      barA.style.height = thisWk[i] + '%';
+      barB.style.height = lastWk[i] + '%';
+    }, 80);
+  });
+}
+
+function startQuotes() {
+  const quotes = [
+    "A budget is telling your money where to go instead of wondering where it went.",
+    "Do not save what is left after spending; spend what is left after saving.",
+    "Financial freedom is available to those who learn about it and work for it.",
+    "It's not your salary that makes you rich, it's your spending habits.",
+    "Small amounts saved daily add up to huge amounts saved annually.",
+    "The secret to wealth is simple — spend less than you earn and invest the rest."
+  ];
+  let qi = 0;
+  const qEl = document.getElementById('quoteText');
+  setInterval(() => {
+    qEl.style.opacity = '0';
+    qEl.style.transition = 'opacity 0.4s';
+    setTimeout(() => {
+      qi = (qi + 1) % quotes.length;
+      qEl.textContent = quotes[qi];
+      qEl.style.opacity = '1';
+    }, 400);
+  }, 5000);
+}
+</script>
+</body>
+</html>
